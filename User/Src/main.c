@@ -22,9 +22,11 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
+#define MAX_COLOURS 3
 
 /* Private variables ---------------------------------------------------------*/
 static int currentTimer = 0;
+static int currentColour = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
@@ -39,17 +41,18 @@ void SysTick_Handler(void)
 }
 
 
-
-
 void EXTI0_IRQHandler(void) {
 	currentTimer = !currentTimer;
-
-
 
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
 }
 
+void EXTI3_IRQHandler(void) {
+	currentColour++;
+	if(currentColour >= MAX_COLOURS) currentColour = 0;
 
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
+}
 
 
 
@@ -89,7 +92,9 @@ int main(void)
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
-	LCD_DisplayStringAtLineMode(39, "copyright xyz", CENTER_MODE);
+	LCD_DisplayStringAtLineMode(39, "copyright silb", CENTER_MODE);
+
+
 
 	GPIO_InitTypeDef userButton;
 	userButton.Alternate = 0;
@@ -103,7 +108,22 @@ int main(void)
 
 
 
+	GPIO_InitTypeDef PG3;
+	PG3.Alternate = 0;
+	PG3.Mode = GPIO_MODE_IT_RISING;
+	PG3.Pin = GPIO_PIN_3;
+	PG3.Pull = GPIO_PULLUP;
+	PG3.Speed = GPIO_SPEED_FAST;
+
+	HAL_GPIO_Init(GPIOG, &PG3);
+	HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+
+
 	int cnt[2] = {0,0};
+	int colour[3] = {LCD_COLOR_RED,
+					LCD_COLOR_GREEN,
+					LCD_COLOR_BLUE};
 
 	/* Infinite loop */
 	while (1)
@@ -113,21 +133,15 @@ int main(void)
 
 		// display timer
 		cnt[currentTimer]++;
+
 		LCD_SetFont(&Font20);
-		LCD_SetTextColor(LCD_COLOR_BLUE);
+		LCD_SetTextColor(colour[currentColour]);
+
 		LCD_SetPrintPosition(5, 0);
 		printf("   Timer: %.1f", cnt[0]/10.0);
 
 		LCD_SetPrintPosition(7, 0);
 		printf("   Timer: %.1f", cnt[1]/10.0);
-
-		// test touch interface
-		int x, y;
-		if (GetTouchState(&x, &y)) {
-			LCD_FillCircle(x, y, 5);
-		}
-
-
 	}
 }
 
