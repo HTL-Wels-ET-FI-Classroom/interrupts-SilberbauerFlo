@@ -27,6 +27,7 @@
 /* Private variables ---------------------------------------------------------*/
 static int currentTimer = 0;
 static int currentColour = 0;
+static int cnt[2] = {0,0};
 
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
@@ -38,6 +39,9 @@ static int GetTouchState (int *xCoord, int *yCoord);
 void SysTick_Handler(void)
 {
 	HAL_IncTick();
+
+	// display timer
+	cnt[currentTimer]++;
 }
 
 
@@ -82,13 +86,7 @@ int main(void)
 	LCD_SetTextColor(LCD_COLOR_YELLOW);
 	LCD_SetBackColor(LCD_COLOR_BLACK);
 	LCD_SetFont(&Font20);
-	// There are 2 ways to print text to screen: using printf or LCD_* functions
-	LCD_DisplayStringAtLine(0, "    HTL Wels");
-	// printf Alternative
-	LCD_SetPrintPosition(1, 0);
-	printf(" Fischergasse 30");
-	LCD_SetPrintPosition(2, 0);
-	printf("   A-4600 Wels");
+	LCD_DisplayStringAtLineMode(1, "EXTI Interrupt", CENTER_MODE);
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
@@ -120,7 +118,6 @@ int main(void)
 
 
 
-	int cnt[2] = {0,0};
 	int colour[3] = {LCD_COLOR_RED,
 					LCD_COLOR_GREEN,
 					LCD_COLOR_BLUE};
@@ -128,20 +125,14 @@ int main(void)
 	/* Infinite loop */
 	while (1)
 	{
-		//execute main loop every 100ms
-		HAL_Delay(100);
-
-		// display timer
-		cnt[currentTimer]++;
-
 		LCD_SetFont(&Font20);
 		LCD_SetTextColor(colour[currentColour]);
 
 		LCD_SetPrintPosition(5, 0);
-		printf("   Timer: %.1f", cnt[0]/10.0);
+		printf("   Timer: %.1f", cnt[0]/1000.0);
 
 		LCD_SetPrintPosition(7, 0);
-		printf("   Timer: %.1f", cnt[1]/10.0);
+		printf("   Timer: %.1f", cnt[1]/1000.0);
 	}
 }
 
